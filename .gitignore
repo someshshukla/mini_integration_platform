@@ -1,0 +1,22 @@
+# Python virtual environment
+venv/
+/venv/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables file (good practice even if not used now)
+.env
+*.env
+
+# IDE / Editor specific files (optional, but good)
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS specific files (optional, but good)
+.DS_Store
+Thumbs.db

@@ -1,0 +1,4 @@
+Flask>=2.0
+requests>=2.20
+flasgger>=0.9.5
+requests-mock>=1.9.3 # For unit testing
