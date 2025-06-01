@@ -1,122 +1,87 @@
-# Mini Integration Platform
+# Mini Integration Platform (Full)
 
-A lightweight integration between a mock CRM and a mock Inventory system. When a new customer is added in the CRM, a "welcome package" request is created in the Inventory system.
+This project connects a mock CRM and Inventory system. When a new customer is created, a welcome package request is sent to Inventory.
 
-## Core Features
+## Features
+- Add and view customers (CRM)
+- Create and list package requests (Inventory)
+- Simple retry logic if Inventory fails
+- Swagger UI documentation for all endpoints
+- Dockerized services for easy setup
+- Unit tests and concurrency test included
+- Architecture diagram
 
-*   **Mock CRM API:** Add and view customers.
-*   **Mock Inventory API:** Create and list package requests.
-*   **Integration Logic:** Customer creation in CRM triggers a package request in Inventory, with retries on failure.
+## Architecture Diagram
 
-## Running the Application
+```mermaid
+graph TD
+    A[Client] --> B[CRM Service (Port 5000)]
+    B --> C{Retry Logic}
+    C -->|Success| D[Inventory Service (Port 5001)]
+    C -->|Fail| E[Log Error]
+    D --> F[Package Store]
+    B --> G[Customer Store]
+```
 
-### Prerequisites
-*   Python 3.7+
-*   pip
-*   Docker (Optional)
+## How to Run
 
-### Option 1: Local Python
-1.  Create and activate a virtual environment:
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # Windows: venv\Scripts\activate
-    ```
-2.  Install dependencies:
-    ```bash
-    pip install -r requirements.txt
-    ```
-3.  Run the application:
-    ```bash
-    python app.py
-    ```
-    The app will be available at `http://127.0.0.1:5000`.
+### 1. Docker Compose
+1. Ensure Docker is installed.
+2. From project root, run:
+   ```
+   docker-compose up --build
+   ```
+3. Access:
+   - CRM Swagger: http://localhost:5000/docs
+   - Inventory Swagger: http://localhost:5001/docs
 
-### Option 2: Docker
-1.  Build the Docker image:
-    ```bash
-    docker build -t mini-integ .
-    ```
-2.  Run the container:
-    ```bash
-    docker run -p 5000:5000 mini-integ
-    ```
-    The app will be available at `http://127.0.0.1:5000`.
+### 2. Manual (no Docker)
+1. Create a Python virtual environment:
+   ```
+   python -m venv venv
+   source venv/bin/activate       # Mac/Linux
+   venv\Scripts\activate        # Windows
+   ```
+2. Install dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+3. Run Inventory service:
+   ```
+   python inventory_service.py
+   ```
+4. In another terminal, run CRM service:
+   ```
+   python crm_service.py
+   ```
+5. Use Swagger or curl:
+   - http://localhost:5000/docs
+   - http://localhost:5001/docs
 
-## API Documentation
+## Testing
 
-The application runs on `http://127.0.0.1:5000`.
-An interactive Swagger UI is available at: `http://127.0.0.1:5000/api/docs/`
+### Unit Tests
+- **test_crm.py**: Tests for CRM logic (mocks Inventory)
+- **test_inventory.py**: Tests for Inventory endpoints
+- **test_concurrency.py**: Concurrency testing script
 
-### CRM API
+Run all tests with:
+```
+pytest
+```
 
-#### 1. Add Customer
-*   `POST /customers`
-*   **Request Body (JSON):**
-    ```json
-    {
-        "name": "Somesh Shukla",
-        "email": "orionbee13@gmail.com"
-    }
-    ```
-    *Requires `name` and `email`.*
-*   **Success Response (201 Created):**
-    ```json
-    {
-        "id": 1,
-        "name": "Somesh Shukla",
-        "email": "orionbee13@gmail.com",
-        "integration_status": "Package request created successfully..." // Or failure message
-    }
-    ```
-*   **Error Response (400 Bad Request):**
-    ```json
-    { "error": "Missing required fields: email" }
-    ```
+### Concurrency Test
+```
+python test_concurrency.py
+```
 
-#### 2. View Customers
-*   `GET /customers`
-*   **Success Response (200 OK):**
-    ```json
-    [
-        { "id": 1, "name": "Somesh Shukla", "email": "orionbee13@gmail.com" }
-    ]
-    ```
-    *(Returns `[]` if no customers.)*
-
----
-
-### Inventory API
-
-#### 1. Create Package Request
-*   `POST /package_requests`
-    *(Typically called by CRM integration)*
-*   **Request Body (JSON):**
-    ```json
-    {
-        "customer_id": 1,
-        "package_type": "welcome_pack_v1"
-    }
-    ```
-*   **Success Response (201 Created):**
-    ```json
-    {
-        "id": 1,
-        "customer_id": 1,
-        "package_type": "welcome_pack_v1",
-        "status": "received"
-    }
-    ```
-
-#### 2. List Package Requests
-*   `GET /package_requests`
-*   **Success Response (200 OK):** A list of package requests. *(Note: Swagger UI docs for this endpoint might be minimal).*
-
-## Integration Flow
-1.  Client `POST`s new customer data to `/customers` (CRM API).
-2.  CRM API saves the customer to its in-memory store.
-3.  CRM API then internally calls `POST /package_requests` (Inventory API), sending the new customer's ID.
-    *   If this internal call fails, it retries up to 3 times with a short delay.
-4.  Inventory API receives the call and creates a package request in its in-memory store.
-5.  CRM API responds to the original client with customer details and the status of the package request attempt.
-    *   Customer creation in CRM succeeds even if the package request to Inventory ultimately fails after retries (an error is logged).
-
+## Files
+- `crm_service.py`
+- `inventory_service.py`
+- `Dockerfile.crm`, `Dockerfile.inventory`
+- `docker-compose.yml`
+- `README.md`
+- `requirements.txt`
+- `test_crm.py`, `test_inventory.py`, `test_concurrency.py`
+- `.gitignore`
+- `architecture_diagram.md`

@@ -1,0 +1,17 @@
+version: '3'
+services:
+  crm:
+    build:
+      context: .
+      dockerfile: Dockerfile.crm
+    ports:
+      - "5000:5000"
+    depends_on:
+      - inventory
+
+  inventory:
+    build:
+      context: .
+      dockerfile: Dockerfile.inventory
+    ports:
+      - "5001:5001"
